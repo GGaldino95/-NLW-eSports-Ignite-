@@ -3,7 +3,7 @@ import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Entypo } from '@expo/vector-icons';
-import { Background, DuoCard, Heading } from '../../components';
+import { Background, DuoCard, DuoMatch, Heading } from '../../components';
 
 import LogoImg from '../../assets/logo-nlw-esports.png'
 import { IDuoCardProps } from '../../components/DuoCard';
@@ -18,6 +18,7 @@ export const Game = () => {
   const navigation = useNavigation();
   const game = route.params as GameParams;
   const [duos, setDuos] = useState<IDuoCardProps[]>([]);
+  const [discordDuoSelected, setDiscordDuoSelected] = useState<string>('');
 
   useEffect(() => {
     fetch(`http://192.168.0.163:3333/games/${game.id}/ads`)
@@ -27,6 +28,12 @@ export const Game = () => {
 
   const handleGoBack = () => {
     navigation.goBack();
+  };
+
+  const getDiscordUser = async (adsId: string) => {
+    fetch(`http://192.168.0.163:3333/ads/${adsId}/discord`)
+      .then((response) => response.json())
+      .then((data) => setDiscordDuoSelected(data.discord));
   };
 
   return (
@@ -48,12 +55,14 @@ export const Game = () => {
           horizontal
           data={duos}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <DuoCard data={item} onConnect={() => { }} />}
+          renderItem={({ item }) => <DuoCard data={item} onConnect={() => getDiscordUser(item.id)} />}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={duos.length > 0 ? styles.contentList : styles.emptyListContent}
           style={styles.containerList}
           ListEmptyComponent={() => <Text style={styles.emptyListText}>Não há anúncios publicados ainda.</Text>}
         />
+
+        <DuoMatch visible={discordDuoSelected.length > 0} discord={discordDuoSelected} onClose={() => setDiscordDuoSelected('')} />
       </SafeAreaView>
     </Background>
   );
